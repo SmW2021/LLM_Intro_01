@@ -7,7 +7,7 @@ from typing import (
 )
 
 from langchain_core.utils.function_calling import convert_to_openai_function
-from langchain_core.pydantic_v1 import BaseModel
+from pydantic import BaseModel
 from langchain_core.tools import BaseTool
 
 

@@ -3,7 +3,7 @@ from typing import Any, Dict, List, Optional
 import logging
 import requests
 from langchain_core.embeddings import Embeddings
-from langchain_core.pydantic_v1 import BaseModel, SecretStr, root_validator
+from pydantic import BaseModel, SecretStr, model_validator
 from langchain_core.utils import convert_to_secret_str, get_from_dict_or_env
 
 
@@ -38,14 +38,17 @@ class TongyiEmbeddings(BaseModel, Embeddings):
     def lc_secrets(self) -> Dict[str, str]:
         return {"dashscope_api_key": "DASHSCOPE_API_KEY"}
 
-    @root_validator()
+    @model_validator(mode='before')
+    @classmethod
     def validate_environment(cls, values: Dict) -> Dict:
         """Validate that api key and python package exists in environment."""
-        values["dashscope_api_key"] = convert_to_secret_str(
-            get_from_dict_or_env(values, "dashscope_api_key", "DASHSCOPE_API_KEY")
-        )
+        api_key = get_from_dict_or_env(values, "dashscope_api_key", "DASHSCOPE_API_KEY")
+        values["dashscope_api_key"] = convert_to_secret_str(api_key)
+
         try:
             import dashscope
+            # Set the API key in the dashscope module
+            dashscope.api_key = api_key
         except ImportError:
             raise ImportError(
                 "Could not import dashscope python package. "
